@@ -52,7 +52,7 @@
                     </li>
                     {% if current_user.role == 'admin' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
+                        <a class="nav-link" href="#" onclick="alert('Admin panel coming soon!')">Admin</a>
                     </li>
                     {% endif %}
                     {% endif %}
@@ -83,10 +83,10 @@
                             <li><a class="dropdown-item" href="{{ url_for('flashcards.index') }}">My Sets</a></li>
                             {% if current_user.role in ['teacher', 'admin'] %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('classroom.index') }}">Classroom</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="alert('Classroom features coming soon!')">Classroom</a></li>
                             {% endif %}
                             {% if current_user.role == 'admin' %}
-                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Admin Panel</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="alert('Admin panel coming soon!')">Admin Panel</a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
