@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
 from app import db
@@ -7,14 +7,15 @@ from app.models.flashcard import FlashcardSet, Flashcard
 from app.models.progress import StudySession, UserProgress
 from sqlalchemy import func
 from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash
 
-admin = Blueprint('admin', __name__, url_prefix='/admin')
+admin = Blueprint('admin', __name__)
 
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != 'admin':
-            flash('Access denied. Admin privileges required.', 'error')
+            flash('You need administrator privileges to access this page.', 'error')
             return redirect(url_for('main.home'))
         return f(*args, **kwargs)
     return decorated_function
@@ -24,36 +25,23 @@ def admin_required(f):
 @admin_required
 def index():
     # Get system statistics
-    try:
-        total_users = User.query.count()
-        total_sets = FlashcardSet.query.count()
-        total_cards = Flashcard.query.count()
-        
-        # Daily active users (users who studied today)
-        today = datetime.now().date()
-        daily_active_users = db.session.query(User.id).join(StudySession)\
-                              .filter(func.date(StudySession.start_time) == today)\
-                              .distinct().count()
-    except Exception as e:
-        # Fallback values if database models aren't ready
-        total_users = 0
-        total_sets = 0
-        total_cards = 0
-        daily_active_users = 0
+    total_users = User.query.count()
+    total_sets = FlashcardSet.query.count()
+    total_cards = Flashcard.query.count()
+    
+    # Daily active users (users who studied today)
+    today = datetime.now().date()
+    daily_active_users = db.session.query(User.id).join(StudySession)\
+                          .filter(func.date(StudySession.start_time) == today)\
+                          .distinct().count()
     
     # Get recent users (last 5)
-    try:
-        recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
-    except Exception as e:
-        recent_users = []
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
     
     # Get pending content for moderation (public sets created recently)
-    try:
-        pending_content = FlashcardSet.query.filter_by(is_public=True)\
-                           .order_by(FlashcardSet.created_at.desc())\
-                           .limit(5).all()
-    except Exception as e:
-        pending_content = []
+    pending_content = FlashcardSet.query.filter_by(is_public=True)\
+                       .order_by(FlashcardSet.created_at.desc())\
+                       .limit(5).all()
     
     return render_template('admin/index.html',
                          total_users=total_users,
@@ -72,120 +60,177 @@ def users():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
-    try:
-        users = User.query.paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-    except Exception as e:
-        users = None
+    users = User.query.paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     
     return render_template('admin/users.html', users=users)
 
-@admin.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin.route('/users/add', methods=['POST'])
 @login_required
 @admin_required
-def edit_user(user_id):
-    try:
-        user = User.query.get_or_404(user_id)
-        
-        if request.method == 'POST':
-            user.role = request.form.get('role', user.role)
-            user.is_active = 'is_active' in request.form
-            
-            db.session.commit()
-            flash(f'User {user.username} updated successfully.', 'success')
-            return redirect(url_for('admin.users'))
-        
-        return render_template('admin/edit_user.html', user=user)
-    except Exception as e:
-        flash('User not found or database error.', 'error')
-        return redirect(url_for('admin.users'))
+def add_user():
+    # Handle both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form.to_dict()
+    
+    # Validate required fields
+    required_fields = ['first_name', 'last_name', 'username', 'email', 'password', 'role']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({'success': False, 'message': f'{field.replace("_", " ").title()} is required.'})
+    
+    # Check if username or email already exists
+    existing_user = User.query.filter(
+        (User.username == data['username']) | (User.email == data['email'])
+    ).first()
+    
+    if existing_user:
+        return jsonify({'success': False, 'message': 'Username or email already exists.'})
+    
+    # Create new user
+    new_user = User(
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        username=data['username'],
+        email=data['email'],
+        role=data['role'],
+        is_active=True
+    )
+    new_user.set_password(data['password'])
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'message': f'User {new_user.username} created successfully.',
+        'user_id': new_user.id
+    })
+
+@admin.route('/users/<int:user_id>/update', methods=['POST'])
+@login_required
+@admin_required
+def update_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Handle both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form.to_dict()
+        # Convert form checkbox values to boolean
+        if 'is_active' in data:
+            data['is_active'] = data['is_active'] == 'on'
+    
+    # Prevent self-role change for admins
+    if user.id == current_user.id and data.get('role') != 'admin':
+        return jsonify({'success': False, 'message': 'Cannot change your own admin role.'})
+    
+    # Update user fields
+    if 'role' in data:
+        user.role = data['role']
+    if 'is_active' in data:
+        user.is_active = bool(data['is_active'])
+    if 'first_name' in data:
+        user.first_name = data['first_name']
+    if 'last_name' in data:
+        user.last_name = data['last_name']
+    if 'email' in data:
+        # Check if email is already taken by another user
+        existing_user = User.query.filter(User.email == data['email'], User.id != user_id).first()
+        if existing_user:
+            return jsonify({'success': False, 'message': 'Email already exists.'})
+        user.email = data['email']
+    
+    user.updated_at = datetime.utcnow()
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'message': f'User {user.username} updated successfully.'
+    })
+
+@admin.route('/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting admin users
+    if user.role == 'admin':
+        return jsonify({'success': False, 'message': 'Cannot delete admin users.'})
+    
+    # Prevent self-deletion
+    if user.id == current_user.id:
+        return jsonify({'success': False, 'message': 'Cannot delete your own account.'})
+    
+    username = user.username
+    db.session.delete(user)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'message': f'User {username} deleted successfully.'
+    })
 
 @admin.route('/users/<int:user_id>/toggle_status', methods=['POST'])
 @login_required
 @admin_required
 def toggle_user_status(user_id):
-    try:
-        user = User.query.get_or_404(user_id)
-        user.is_active = not user.is_active
-        db.session.commit()
-        
-        status = 'activated' if user.is_active else 'deactivated'
-        return jsonify({'success': True, 'message': f'User {status} successfully.'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': 'Error updating user status.'})
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent self-deactivation
+    if user.id == current_user.id:
+        return jsonify({'success': False, 'message': 'Cannot deactivate your own account.'})
+    
+    user.is_active = not user.is_active
+    db.session.commit()
+    
+    status = 'activated' if user.is_active else 'deactivated'
+    return jsonify({'success': True, 'message': f'User {status} successfully.'})
 
 @admin.route('/moderation')
 @login_required
 @admin_required
 def moderation():
-    try:
-        # Get all public flashcard sets for moderation
-        sets = FlashcardSet.query.filter_by(is_public=True)\
-                 .order_by(FlashcardSet.created_at.desc()).all()
-    except Exception as e:
-        sets = []
+    sets = FlashcardSet.query.filter_by(is_public=True)\
+             .order_by(FlashcardSet.created_at.desc())\
+             .all()
     
     return render_template('admin/moderation.html', sets=sets)
-
-@admin.route('/content/<int:content_id>/approve', methods=['POST'])
-@login_required
-@admin_required
-def approve_content(content_id):
-    try:
-        content = FlashcardSet.query.get_or_404(content_id)
-        # Add approval logic here (e.g., set approved flag)
-        flash('Content approved successfully.', 'success')
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': 'Error approving content.'})
-
-@admin.route('/content/<int:content_id>/reject', methods=['POST'])
-@login_required
-@admin_required
-def reject_content(content_id):
-    try:
-        content = FlashcardSet.query.get_or_404(content_id)
-        content.is_public = False
-        db.session.commit()
-        flash('Content rejected and made private.', 'success')
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': 'Error rejecting content.'})
 
 @admin.route('/analytics')
 @login_required
 @admin_required
 def analytics():
-    # Generate analytics data
-    try:
-        # User growth over time
-        user_growth = db.session.query(
-            func.date(User.created_at).label('date'),
-            func.count(User.id).label('count')
-        ).group_by(func.date(User.created_at)).all()
-        
-        # Study activity over time
-        study_activity = db.session.query(
-            func.date(StudySession.start_time).label('date'),
-            func.count(StudySession.id).label('count')
-        ).group_by(func.date(StudySession.start_time)).all()
-        
-    except Exception as e:
-        user_growth = []
-        study_activity = []
-    
-    return render_template('admin/analytics.html',
-                         user_growth=user_growth,
-                         study_activity=study_activity)
+    return render_template('admin/analytics.html')
 
 @admin.route('/settings', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def settings():
     if request.method == 'POST':
-        # Handle system settings updates
-        flash('Settings updated successfully.', 'success')
+        flash('Settings updated successfully!', 'success')
         return redirect(url_for('admin.settings'))
     
     return render_template('admin/settings.html')
+
+@admin.route('/content/<int:content_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def approve_content(content_id):
+    flashcard_set = FlashcardSet.query.get_or_404(content_id)
+    # Content is already public, so this is just for demo
+    return jsonify({'success': True, 'message': 'Content approved successfully.'})
+
+@admin.route('/content/<int:content_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_content(content_id):
+    flashcard_set = FlashcardSet.query.get_or_404(content_id)
+    flashcard_set.is_public = False
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Content rejected and made private.'})

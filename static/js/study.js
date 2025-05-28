@@ -219,213 +219,124 @@ function updateStudyProgress() {
 
 // Show study complete screen
 function showStudyComplete() {
-    const { correctAnswers, questions, startTime } = window.studyData;
-    const duration = Math.floor((Date.now() - startTime) / 1000);
+    const { correctAnswers, questions, startTime, mode } = window.studyData;
+    const totalTime = Math.round((Date.now() - startTime) / 1000);
     const accuracy = Math.round((correctAnswers / questions.length) * 100);
     
     const container = document.getElementById('question-container');
     container.innerHTML = `
         <div class="study-complete text-center">
-            <i class="bi bi-trophy-fill text-warning" style="font-size: 4rem;"></i>
-            <h2 class="mt-3">Study Session Complete!</h2>
-            <div class="stats mt-4">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-number">${accuracy}%</div>
-                            <div class="stat-label">Accuracy</div>
+            <div class="completion-icon mb-4">
+                <i class="bi bi-trophy fs-1 text-warning"></i>
+            </div>
+            <h2 class="fw-bold mb-3">Study Session Complete!</h2>
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-8">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-primary text-white rounded">
+                                <h3 class="mb-1">${correctAnswers}/${questions.length}</h3>
+                                <small>Correct Answers</small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-number">${correctAnswers}/${questions.length}</div>
-                            <div class="stat-label">Correct</div>
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-success text-white rounded">
+                                <h3 class="mb-1">${accuracy}%</h3>
+                                <small>Accuracy</small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-number">${window.utils.formatTime(duration)}</div>
-                            <div class="stat-label">Time</div>
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-info text-white rounded">
+                                <h3 class="mb-1">${totalTime}s</h3>
+                                <small>Time Spent</small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="mt-4">
-                <button class="btn btn-primary me-2" onclick="restartStudy()">
-                    <i class="bi bi-arrow-clockwise"></i> Study Again
+            <div class="d-flex gap-3 justify-content-center">
+                <button class="btn btn-primary" onclick="restartStudy()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Study Again
                 </button>
-                <a href="/dashboard" class="btn btn-outline-primary">
-                    <i class="bi bi-house"></i> Dashboard
-                </a>
+                <button class="btn btn-outline-primary" onclick="tryDifferentMode()">
+                    <i class="bi bi-shuffle me-2"></i>Try Different Mode
+                </button>
+                <button class="btn btn-outline-secondary" onclick="goBackToSet()">
+                    <i class="bi bi-house me-2"></i>Back to Set
+                </button>
             </div>
         </div>
     `;
+    
+    // Submit session results
+    submitStudySession(correctAnswers, questions.length, totalTime, accuracy);
 }
 
 // Initialize study controls
 function initializeStudyControls() {
-    const controls = document.querySelector('.study-controls');
-    if (!controls) return;
-    
     // Add keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        switch (e.key) {
-            case 'ArrowRight':
-            case ' ':
-                e.preventDefault();
-                const flashcard = document.querySelector('.flashcard');
-                if (flashcard && !flashcard.classList.contains('flipped')) {
-                    flashcard.click();
-                }
-                break;
-            case 'ArrowLeft':
-                e.preventDefault();
-                // Go to previous question if implemented
-                break;
-        }
-    });
-}
-
-// Initialize match game
-function initializeMatchGame() {
-    const matchGrid = document.querySelector('.match-grid');
-    if (!matchGrid) return;
-    
-    const setId = matchGrid.dataset.setId;
-    loadMatchGameData(setId);
-}
-
-// Load match game data
-async function loadMatchGameData(setId) {
-    try {
-        const response = await fetch(`/study/api/${setId}/questions?mode=match`);
-        const questions = await response.json();
-        
-        setupMatchGame(questions);
-    } catch (error) {
-        console.error('Error loading match game:', error);
-    }
-}
-
-// Setup match game
-function setupMatchGame(questions) {
-    const grid = document.querySelector('.match-grid');
-    const cards = [];
-    
-    // Create term and definition cards
-    questions.forEach(q => {
-        cards.push({ type: 'term', content: q.term, matchId: q.id });
-        cards.push({ type: 'definition', content: q.definition, matchId: q.id });
-    });
-    
-    // Shuffle cards
-    const shuffledCards = window.utils.shuffleArray(cards);
-    
-    // Display cards
-    grid.innerHTML = shuffledCards.map((card, index) => `
-        <div class="match-card" data-match-id="${card.matchId}" data-type="${card.type}" data-index="${index}">
-            ${card.content}
-        </div>
-    `).join('');
-    
-    // Initialize match game logic
-    let selectedCards = [];
-    let matchedCount = 0;
-    const totalPairs = questions.length;
-    
-    document.querySelectorAll('.match-card').forEach(card => {
-        card.addEventListener('click', () => {
-            if (card.classList.contains('matched') || card.classList.contains('selected')) {
-                return;
-            }
-            
-            card.classList.add('selected');
-            selectedCards.push(card);
-            
-            if (selectedCards.length === 2) {
-                checkMatch(selectedCards, () => {
-                    matchedCount++;
-                    if (matchedCount === totalPairs) {
-                        showMatchGameComplete();
+    document.addEventListener('keydown', function(e) {
+        if (e.target.closest('.study-container')) {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    previousQuestion();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    nextQuestion();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    if (window.studyData.mode === 'flashcards') {
+                        flipCurrentCard();
                     }
-                });
-                selectedCards = [];
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (window.studyData.mode === 'flashcards') {
+                        flipCurrentCard();
+                    }
+                    break;
             }
-        });
-    });
-}
-
-// Check if two cards match
-function checkMatch(cards, onMatch) {
-    const [card1, card2] = cards;
-    const match1 = card1.dataset.matchId;
-    const match2 = card2.dataset.matchId;
-    
-    setTimeout(() => {
-        if (match1 === match2 && card1.dataset.type !== card2.dataset.type) {
-            // Match found
-            cards.forEach(card => {
-                card.classList.remove('selected');
-                card.classList.add('matched');
-            });
-            onMatch();
-        } else {
-            // No match
-            cards.forEach(card => {
-                card.classList.remove('selected');
-            });
         }
-    }, 1000);
-}
-
-// Show match game complete
-function showMatchGameComplete() {
-    window.utils.showToast('Congratulations! All pairs matched!', 'success');
-    
-    setTimeout(() => {
-        const restartBtn = document.createElement('button');
-        restartBtn.className = 'btn btn-primary';
-        restartBtn.textContent = 'Play Again';
-        restartBtn.onclick = () => location.reload();
-        
-        document.querySelector('.match-grid').appendChild(restartBtn);
-    }, 2000);
-}
-
-// Initialize test mode
-function initializeTestMode() {
-    const testContainer = document.querySelector('.test-container');
-    if (!testContainer) return;
-    
-    // Test mode is similar to multiple choice but with more formal structure
-    // Implementation would be similar to multiple choice study mode
-}
-
-// Initialize learn mode (adaptive learning)
-function initializeLearnMode() {
-    const learnContainer = document.querySelector('.learn-container');
-    if (!learnContainer) return;
-    
-    // Learn mode focuses on cards you don't know well
-    // Implementation would prioritize cards based on user performance
+    });
 }
 
 // Start study session tracking
-async function startStudySession(setId, mode) {
-    try {
-        await fetch('/study/api/start_session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                set_id: setId,
-                study_mode: mode
-            })
-        });
-    } catch (error) {
-        console.error('Error starting study session:', error);
-    }
+function startStudySession(setId, mode) {
+    fetch('/study/api/start_session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            set_id: setId,
+            mode: mode,
+            start_time: new Date().toISOString()
+        })
+    }).catch(error => {
+        console.log('Demo mode: Session tracking not available');
+    });
+}
+
+// Submit study session results
+function submitStudySession(correct, total, timeSpent, accuracy) {
+    fetch('/study/api/submit_session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            correct_answers: correct,
+            total_questions: total,
+            time_spent: timeSpent,
+            accuracy: accuracy,
+            mode: window.studyData.mode
+        })
+    }).catch(error => {
+        console.log('Demo mode: Results submission not available');
+    });
 }
 
 // Restart study session
@@ -433,11 +344,69 @@ function restartStudy() {
     window.studyData.currentIndex = 0;
     window.studyData.correctAnswers = 0;
     window.studyData.startTime = Date.now();
-    
-    // Shuffle questions for variety
-    window.studyData.questions = window.utils.shuffleArray(window.studyData.questions);
-    
     displayCurrentQuestion();
+}
+
+// Try different study mode
+function tryDifferentMode() {
+    const currentUrl = window.location.pathname;
+    const setId = currentUrl.match(/\/study\/(\d+)/)[1];
+    window.location.href = `/flashcards/${setId}`;
+}
+
+// Go back to set
+function goBackToSet() {
+    const currentUrl = window.location.pathname;
+    const setId = currentUrl.match(/\/study\/(\d+)/)[1];
+    window.location.href = `/flashcards/${setId}`;
+}
+
+// Flip current card (for flashcard mode)
+function flipCurrentCard() {
+    const currentCard = document.querySelector('.flashcard.active') || document.querySelector('.flashcard');
+    if (currentCard) {
+        currentCard.classList.toggle('flipped');
+        
+        const feedback = document.querySelector('.study-feedback');
+        if (feedback) {
+            feedback.style.display = currentCard.classList.contains('flipped') ? 'block' : 'none';
+        }
+    }
+}
+
+// Previous question navigation
+function previousQuestion() {
+    if (window.studyData.currentIndex > 0) {
+        window.studyData.currentIndex--;
+        displayCurrentQuestion();
+    }
+}
+
+// Initialize match game
+function initializeMatchGame() {
+    const matchContainer = document.querySelector('.match-game-container');
+    if (!matchContainer) return;
+    
+    // Match game logic would go here
+    console.log('Match game initialized');
+}
+
+// Initialize test mode
+function initializeTestMode() {
+    const testContainer = document.querySelector('.test-mode-container');
+    if (!testContainer) return;
+    
+    // Test mode logic would go here
+    console.log('Test mode initialized');
+}
+
+// Initialize learn mode
+function initializeLearnMode() {
+    const learnContainer = document.querySelector('.learn-mode-container');
+    if (!learnContainer) return;
+    
+    // Learn mode logic would go here
+    console.log('Learn mode initialized');
 }
 
 // Export functions

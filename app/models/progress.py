@@ -1,5 +1,5 @@
-from app import db
 from datetime import datetime
+from app import db
 
 class StudySession(db.Model):
     __tablename__ = 'study_sessions'
@@ -7,19 +7,15 @@ class StudySession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     flashcard_set_id = db.Column(db.Integer, db.ForeignKey('flashcard_sets.id'), nullable=False)
-    study_mode = db.Column(db.String(50), nullable=False)  # flashcards, learn, test, match
-    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    mode = db.Column(db.String(50), nullable=False)  # flashcards, learn, test, match
+    start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
-    total_questions = db.Column(db.Integer, default=0)
-    correct_answers = db.Column(db.Integer, default=0)
+    score = db.Column(db.Float)
+    total_questions = db.Column(db.Integer)
+    correct_answers = db.Column(db.Integer)
     
-    # Relationships
-    flashcard_set = db.relationship('FlashcardSet', backref='study_sessions')
-    
-    def calculate_accuracy(self):
-        if self.total_questions == 0:
-            return 0
-        return (self.correct_answers / self.total_questions) * 100
+    def __repr__(self):
+        return f'<StudySession {self.mode} for Set {self.flashcard_set_id}>'
 
 class UserProgress(db.Model):
     __tablename__ = 'user_progress'
@@ -27,16 +23,13 @@ class UserProgress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     flashcard_id = db.Column(db.Integer, db.ForeignKey('flashcards.id'), nullable=False)
-    correct_count = db.Column(db.Integer, default=0)
-    incorrect_count = db.Column(db.Integer, default=0)
-    last_studied = db.Column(db.DateTime, default=datetime.utcnow)
-    confidence_level = db.Column(db.Integer, default=1)  # 1-5 scale
+    correct_count = db.Column(db.Integer, nullable=False, default=0)
+    incorrect_count = db.Column(db.Integer, nullable=False, default=0)
+    last_studied = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    mastery_level = db.Column(db.Integer, nullable=False, default=0)  # 0-5 scale
     
-    # Relationships
-    flashcard = db.relationship('Flashcard', backref='progress_records')
+    # Composite unique constraint
+    __table_args__ = (db.UniqueConstraint('user_id', 'flashcard_id', name='unique_user_flashcard'),)
     
-    def calculate_accuracy(self):
-        total = self.correct_count + self.incorrect_count
-        if total == 0:
-            return 0
-        return (self.correct_count / total) * 100
+    def __repr__(self):
+        return f'<UserProgress User {self.user_id} Card {self.flashcard_id}>'

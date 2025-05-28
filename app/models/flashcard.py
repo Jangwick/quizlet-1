@@ -1,5 +1,5 @@
-from app import db
 from datetime import datetime
+from app import db
 
 class FlashcardSet(db.Model):
     __tablename__ = 'flashcard_sets'
@@ -7,14 +7,14 @@ class FlashcardSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    is_public = db.Column(db.Boolean, nullable=False, default=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    is_public = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    flashcards = db.relationship('Flashcard', backref='flashcard_set', lazy=True, cascade='all, delete-orphan')
-    tags = db.relationship('Tag', secondary='flashcard_set_tags', backref='flashcard_sets')
+    flashcards = db.relationship('Flashcard', backref='flashcard_set', lazy=True, cascade='all, delete-orphan', order_by='Flashcard.order')
+    study_sessions = db.relationship('StudySession', backref='flashcard_set', lazy=True, cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<FlashcardSet {self.title}>'
@@ -25,10 +25,13 @@ class Flashcard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     term = db.Column(db.Text, nullable=False)
     definition = db.Column(db.Text, nullable=False)
-    image_url = db.Column(db.String(255))
-    audio_url = db.Column(db.String(255))
-    set_id = db.Column(db.Integer, db.ForeignKey('flashcard_sets.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    order = db.Column(db.Integer, nullable=False, default=0)
+    flashcard_set_id = db.Column(db.Integer, db.ForeignKey('flashcard_sets.id'), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    progress = db.relationship('UserProgress', backref='flashcard', lazy=True, cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Flashcard {self.term}>'

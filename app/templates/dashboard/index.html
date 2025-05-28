@@ -15,7 +15,7 @@
     </div>
 </section>
 
-<div class="container py-4">
+<div class="container py-5">
     <!-- Quick Stats -->
     <div class="row mb-5">
         <div class="col-md-3">
@@ -152,36 +152,134 @@
 
         <!-- Recent Activity -->
         <div class="col-lg-4">
-            <h3 class="fw-bold mb-3">Recent Activity</h3>
-            <div class="card dashboard-card">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
                 <div class="card-body">
-                    <div id="activity-feed">
-                        {% if recent_activity %}
+                    {% if recent_activity %}
+                    <div class="activity-feed">
                         {% for activity in recent_activity %}
                         <div class="activity-item d-flex align-items-start mb-3">
                             <div class="activity-icon me-3">
-                                <i class="bi {{ get_activity_icon(activity.type) }} text-primary"></i>
+                                <i class="bi {{ activity.icon or 'bi-circle' }} text-primary"></i>
                             </div>
                             <div class="activity-content">
-                                <div class="activity-text">{{ activity.description }}</div>
-                                <small class="text-muted">{{ activity.timestamp.strftime('%b %d, %Y') }}</small>
+                                <p class="mb-1">{{ activity.description }}</p>
+                                <small class="text-muted">{{ activity.timestamp.strftime('%b %d, %Y at %I:%M %p') }}</small>
                             </div>
                         </div>
                         {% endfor %}
-                        {% else %}
-                        <div class="text-center py-3">
-                            <i class="bi bi-clock-history fs-2 text-muted"></i>
-                            <p class="text-muted mt-2 mb-0">No recent activity</p>
-                        </div>
-                        {% endif %}
                     </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-clock-history fs-2 text-muted"></i>
+                        <p class="text-muted mt-2">No recent activity</p>
+                        <a href="{{ url_for('flashcards.create_set') }}" class="btn btn-primary btn-sm">
+                            Create Your First Set
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.activity-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.study-set-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+.study-set-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+    fill: transparent;
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.progress-bg {
+    stroke: #e9ecef;
+}
+
+.progress-fill {
+    stroke: #28a745;
+    stroke-dasharray: 251.2;
+    stroke-dashoffset: calc(251.2 - (251.2 * var(--progress)) / 100);
+    transition: stroke-dashoffset 0.5s ease;
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+
+// Animate progress rings
+document.addEventListener('DOMContentLoaded', function() {
+    const progressRings = document.querySelectorAll('.progress-fill');
+    progressRings.forEach(ring => {
+        const progress = ring.closest('.progress-ring').dataset.progress || 0;
+        ring.style.setProperty('--progress', progress);
+    });
+});
+
+// Quick action handlers
+function quickStudy() {
+    // This would redirect to a quick study session
+    alert('Quick study feature coming soon!');
+}
+
+function createSet() {
+    window.location.href = '{{ url_for("flashcards.create_set") }}';
+}
+
+function reviewMistakes() {
+    window.location.href = '{{ url_for("study.review_mistakes") }}';
+}
+
+function viewProgress() {
+    alert('Detailed progress tracking coming soon!');
+}
+</script>
 {% endblock %}

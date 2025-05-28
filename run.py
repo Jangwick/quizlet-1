@@ -1,4 +1,5 @@
-from app import create_app
+from app import create_app, db
+from app.models import User, FlashcardSet, Flashcard, StudySession, UserProgress
 from datetime import datetime
 from flask import render_template_string
 
@@ -78,6 +79,17 @@ def test_route():
     </body>
     </html>
     ''')
+
+@app.shell_context_processor
+def make_shell_context():
+    return {
+        'db': db,
+        'User': User,
+        'FlashcardSet': FlashcardSet,
+        'Flashcard': Flashcard,
+        'StudySession': StudySession,
+        'UserProgress': UserProgress
+    }
 
 if __name__ == '__main__':
     print("🚀 Starting Quizlet Clone Application...")

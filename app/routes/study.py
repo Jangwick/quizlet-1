@@ -31,6 +31,27 @@ def match_mode(set_id):
     flashcard_set = FlashcardSet.query.get_or_404(set_id)
     return render_template('study/match.html', flashcard_set=flashcard_set)
 
+# Add missing route aliases for backwards compatibility
+@study.route('/<int:set_id>/flashcards')
+@login_required
+def flashcards(set_id):
+    return flashcards_mode(set_id)
+
+@study.route('/<int:set_id>/learn')
+@login_required  
+def learn(set_id):
+    return learn_mode(set_id)
+
+@study.route('/<int:set_id>/test')
+@login_required
+def test(set_id):
+    return test_mode(set_id)
+
+@study.route('/<int:set_id>/match')
+@login_required
+def match(set_id):
+    return match_mode(set_id)
+
 @study.route('/api/<int:set_id>/questions')
 @login_required
 def get_questions(set_id):
