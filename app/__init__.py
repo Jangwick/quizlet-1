@@ -33,12 +33,14 @@ def create_app():
     from app.routes.flashcards import flashcards
     from app.routes.study import study
     from app.routes.dashboard import dashboard
+    from app.routes.admin import admin
     
     app.register_blueprint(main)
     app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(flashcards, url_prefix='/flashcards')
     app.register_blueprint(study, url_prefix='/study')
     app.register_blueprint(dashboard, url_prefix='/dashboard')
+    app.register_blueprint(admin, url_prefix='/admin')
     
     # Context processor for current year
     @app.context_processor
