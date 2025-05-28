@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Quizlet Clone{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold mb-2">Welcome back, {{ current_user.first_name }}!</h1>
+                <p class="lead">Ready to continue your learning journey?</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-collection fs-1 text-primary mb-2"></i>
+                    <h3 class="fw-bold" id="total-sets">{{ total_sets or 0 }}</h3>
+                    <p class="text-muted mb-0">Study Sets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-fire fs-1 text-warning mb-2"></i>
+                    <h3 class="fw-bold" id="study-streak">{{ study_streak or 0 }}</h3>
+                    <p class="text-muted mb-0">Day Streak</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-card-text fs-1 text-info mb-2"></i>
+                    <h3 class="fw-bold" id="cards-studied">{{ cards_studied_today or 0 }}</h3>
+                    <p class="text-muted mb-0">Cards Today</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <i class="bi bi-graph-up fs-1 text-success mb-2"></i>
+                    <h3 class="fw-bold" id="accuracy">{{ overall_accuracy or 0 }}%</h3>
+                    <p class="text-muted mb-0">Accuracy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-3">Quick Actions</h3>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('flashcards.create_set') }}" class="quick-action text-decoration-none" data-action="create-set">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-plus-circle fs-1 text-primary mb-2"></i>
+                        <h5 class="fw-bold">Create Set</h5>
+                        <p class="text-muted small">Start a new study set</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="quick-action text-decoration-none" data-action="continue-studying">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-play-circle fs-1 text-success mb-2"></i>
+                        <h5 class="fw-bold">Continue Studying</h5>
+                        <p class="text-muted small">Pick up where you left off</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="quick-action text-decoration-none" data-action="review-mistakes">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-arrow-repeat fs-1 text-warning mb-2"></i>
+                        <h5 class="fw-bold">Review Mistakes</h5>
+                        <p class="text-muted small">Study cards you got wrong</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="quick-action text-decoration-none" data-action="random-study">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-shuffle fs-1 text-info mb-2"></i>
+                        <h5 class="fw-bold">Random Study</h5>
+                        <p class="text-muted small">Study a random set</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Sets -->
+        <div class="col-lg-8">
+            <h3 class="fw-bold mb-3">Your Recent Sets</h3>
+            <div class="row" id="recent-sets">
+                {% if recent_sets %}
+                {% for set in recent_sets %}
+                <div class="col-md-6 mb-3">
+                    <div class="card dashboard-card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ set.title }}</h6>
+                            <p class="card-text text-muted small">{{ set.flashcards|length }} cards</p>
+                            <div class="progress mb-2" style="height: 5px;">
+                                <div class="progress-bar" style="width: {{ set.progress or 0 }}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">{{ set.progress or 0 }}% mastered</small>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('study.flashcards_mode', set_id=set.id) }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-play"></i>
+                                    </a>
+                                    <a href="{{ url_for('flashcards.edit_set', set_id=set.id) }}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="col-12">
+                    <div class="text-center py-4">
+                        <i class="bi bi-collection fs-1 text-muted"></i>
+                        <h5 class="mt-3">No study sets yet</h5>
+                        <p class="text-muted">Create your first study set to get started!</p>
+                        <a href="{{ url_for('flashcards.create_set') }}" class="btn btn-primary">Create Your First Set</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-4">
+            <h3 class="fw-bold mb-3">Recent Activity</h3>
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <div id="activity-feed">
+                        {% if recent_activity %}
+                        {% for activity in recent_activity %}
+                        <div class="activity-item d-flex align-items-start mb-3">
+                            <div class="activity-icon me-3">
+                                <i class="bi {{ get_activity_icon(activity.type) }} text-primary"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-text">{{ activity.description }}</div>
+                                <small class="text-muted">{{ activity.timestamp.strftime('%b %d, %Y') }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-3">
+                            <i class="bi bi-clock-history fs-2 text-muted"></i>
+                            <p class="text-muted mt-2 mb-0">No recent activity</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

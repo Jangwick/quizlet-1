@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Learn: {{ flashcard_set.title }} - Quizlet Clone{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">{{ flashcard_set.title }}</h2>
+                <p class="text-muted">Adaptive Learning Mode</p>
+            </div>
+            
+            <div class="learn-container" data-mode="learn" data-set-id="{{ flashcard_set.id }}">
+                <div id="question-container">
+                    <!-- Questions will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/study.js') }}"></script>
+{% endblock %}

@@ -53,6 +53,14 @@ def get_questions(set_id):
                 'correct_answer': card.definition,
                 'type': 'multiple_choice'
             })
+        elif mode == 'match':
+            # Match game format
+            questions.append({
+                'id': card.id,
+                'term': card.term,
+                'definition': card.definition,
+                'type': 'match'
+            })
         else:
             # Regular flashcard format
             questions.append({
@@ -95,3 +103,43 @@ def submit_answer():
     db.session.commit()
     
     return jsonify({'success': True})
+
+@study.route('/api/start_session', methods=['POST'])
+@login_required
+def start_session():
+    data = request.get_json()
+    set_id = data.get('set_id')
+    study_mode = data.get('study_mode', 'flashcards')
+    
+    # Create new study session
+    session = StudySession(
+        user_id=current_user.id,
+        flashcard_set_id=set_id,
+        study_mode=study_mode
+    )
+    db.session.add(session)
+    db.session.commit()
+    
+    return jsonify({'session_id': session.id})
+
+@study.route('/review/mistakes')
+@login_required
+def review_mistakes():
+    # Get cards that user has answered incorrectly
+    mistake_cards = db.session.query(Flashcard).join(UserProgress).filter(
+        UserProgress.user_id == current_user.id,
+        UserProgress.incorrect_count > UserProgress.correct_count
+    ).all()
+    
+    if not mistake_cards:
+        return render_template('study/no_mistakes.html')
+    
+    # Create a temporary flashcard set for review
+    review_set = {
+        'id': 'review',
+        'title': 'Review Mistakes',
+        'description': 'Cards you need to review',
+        'flashcards': mistake_cards
+    }
+    
+    return render_template('study/flashcards.html', flashcard_set=review_set)

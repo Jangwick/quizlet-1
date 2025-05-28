@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Create Set - Quizlet Clone{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold mb-4">Create a New Study Set</h1>
+            
+            <form id="flashcard-form" method="POST">
+                <!-- Set Information -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Set Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" id="category" name="category">
+                                        <option value="">Select category</option>
+                                        <option value="language">Language</option>
+                                        <option value="science">Science</option>
+                                        <option value="math">Mathematics</option>
+                                        <option value="history">History</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tags" class="form-label">Tags</label>
+                                    <input type="text" class="form-control" id="tags" name="tags" placeholder="Enter tags separated by commas">
+                                    <div class="form-text">e.g., spanish, vocabulary, beginner</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="is_public" name="is_public">
+                                        <label class="form-check-label" for="is_public">
+                                            Make this set public
+                                        </label>
+                                        <div class="form-text">Public sets can be found by other users</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Flashcards -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Flashcards</h5>
+                        <button type="button" id="add-card-btn" class="btn btn-outline-primary">
+                            <i class="bi bi-plus"></i> Add Card
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="cards-container">
+                            <!-- Initial cards will be added here -->
+                            <div class="term-definition-pair position-relative" data-card-id="new">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Term</label>
+                                        <textarea class="form-control card-input" name="terms[]" rows="3" placeholder="Enter term"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Definition</label>
+                                        <textarea class="form-control card-input" name="definitions[]" rows="3" placeholder="Enter definition"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Image URL (optional)</label>
+                                        <input type="url" class="form-control" name="image_urls[]" placeholder="https://...">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Audio URL (optional)</label>
+                                        <input type="url" class="form-control" name="audio_urls[]" placeholder="https://...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Create Set</button>
+                    <a href="{{ url_for('flashcards.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/flashcards.js') }}"></script>
+{% endblock %}

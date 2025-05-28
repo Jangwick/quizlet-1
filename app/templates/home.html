@@ -10,7 +10,7 @@
             <div class="col-lg-6">
                 <h1 class="display-4 fw-bold mb-4">Learn Smarter, Not Harder</h1>
                 <p class="lead mb-4">Create flashcards, take quizzes, and track your progress with our comprehensive learning platform.</p>
-                {% if not current_user.is_authenticated %}
+                {% if not current_user or not current_user.is_authenticated %}
                 <div class="d-grid gap-2 d-md-flex">
                     <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg me-md-2">Get Started</a>
                     <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">Sign In</a>
@@ -123,10 +123,10 @@
                     <img src="https://picsum.photos/300/200?random={{ loop.index }}" class="card-img-top" alt="Study set thumbnail">
                     <div class="card-body">
                         <h5 class="card-title">{{ set.title }}</h5>
-                        <p class="card-text">{{ set.description[:100] }}{% if set.description|length > 100 %}...{% endif %}</p>
+                        <p class="card-text">{{ set.description[:100] if set.description else 'No description available' }}{% if set.description and set.description|length > 100 %}...{% endif %}</p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">{{ set.flashcards|length }} terms</small>
-                            <small class="text-muted">by {{ set.creator.username }}</small>
+                            <small class="text-muted">{{ set.flashcards|length if set.flashcards else 0 }} terms</small>
+                            <small class="text-muted">by {{ set.creator.username if set.creator else 'Unknown' }}</small>
                         </div>
                     </div>
                     <div class="card-footer bg-transparent">

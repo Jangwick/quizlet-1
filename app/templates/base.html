@@ -50,6 +50,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a>
                     </li>
+                    {% if current_user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
+                    </li>
+                    {% endif %}
                     {% endif %}
                 </ul>
                 
@@ -67,10 +72,22 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i> {{ current_user.get_full_name() }}
+                            {% if current_user.role == 'admin' %}
+                            <span class="badge bg-warning text-dark ms-1">Admin</span>
+                            {% elif current_user.role == 'teacher' %}
+                            <span class="badge bg-info ms-1">Teacher</span>
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('flashcards.index') }}">My Sets</a></li>
+                            {% if current_user.role in ['teacher', 'admin'] %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('classroom.index') }}">Classroom</a></li>
+                            {% endif %}
+                            {% if current_user.role == 'admin' %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Admin Panel</a></li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
                         </ul>
@@ -108,34 +125,95 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
+    <footer class="bg-dark text-light py-5 mt-auto">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
-                    <h5><i class="bi bi-brain"></i> Quizlet Clone</h5>
-                    <p>Your comprehensive learning platform for flashcards, study modes, and progress tracking.</p>
+                <div class="col-lg-4 mb-4">
+                    <div class="footer-brand mb-3">
+                        <h5 class="fw-bold">
+                            <i class="bi bi-brain text-primary me-2"></i>
+                            Quizlet Clone
+                        </h5>
+                        <p class="text-light opacity-75 mb-3">
+                            Empowering learners worldwide with innovative study tools and collaborative learning experiences.
+                        </p>
+                    </div>
+                    <div class="social-links">
+                        <a href="#" class="text-light me-3 fs-5"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-light me-3 fs-5"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-light me-3 fs-5"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-light me-3 fs-5"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="text-light fs-5"><i class="bi bi-youtube"></i></a>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <h6>Quick Links</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('main.home') }}" class="text-light">Home</a></li>
-                        <li><a href="{{ url_for('main.about') }}" class="text-light">About</a></li>
-                        <li><a href="{{ url_for('main.contact') }}" class="text-light">Contact</a></li>
+                
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold mb-3 text-primary">Features</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="#" class="text-light opacity-75">Flashcards</a></li>
+                        <li><a href="#" class="text-light opacity-75">Study Modes</a></li>
+                        <li><a href="#" class="text-light opacity-75">Progress Tracking</a></li>
+                        <li><a href="#" class="text-light opacity-75">Mobile App</a></li>
+                        <li><a href="#" class="text-light opacity-75">Collaboration</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3">
-                    <h6>Features</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-light">Flashcards</a></li>
-                        <li><a href="#" class="text-light">Study Modes</a></li>
-                        <li><a href="#" class="text-light">Progress Tracking</a></li>
+                
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold mb-3 text-primary">Resources</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="{{ url_for('main.about') }}" class="text-light opacity-75">About Us</a></li>
+                        <li><a href="#" class="text-light opacity-75">Help Center</a></li>
+                        <li><a href="#" class="text-light opacity-75">Study Guides</a></li>
+                        <li><a href="#" class="text-light opacity-75">Blog</a></li>
+                        <li><a href="{{ url_for('main.contact') }}" class="text-light opacity-75">Contact</a></li>
                     </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold mb-3 text-primary">Company</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="#" class="text-light opacity-75">Careers</a></li>
+                        <li><a href="#" class="text-light opacity-75">Press</a></li>
+                        <li><a href="#" class="text-light opacity-75">Privacy Policy</a></li>
+                        <li><a href="#" class="text-light opacity-75">Terms of Service</a></li>
+                        <li><a href="#" class="text-light opacity-75">Accessibility</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold mb-3 text-primary">Download</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-apple me-2"></i>App Store
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-google-play me-2"></i>Google Play
+                        </a>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-light opacity-50">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Trusted by 50M+ learners
+                        </small>
+                    </div>
                 </div>
             </div>
-            <hr class="my-3">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <p>&copy; {{ current_year }} Quizlet Clone. All rights reserved.</p>
+            
+            <hr class="my-4 opacity-25">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-light opacity-75">
+                        &copy; {{ current_year }} Quizlet Clone. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex justify-content-md-end gap-3 mt-3 mt-md-0">
+                        <a href="#" class="text-light opacity-75 small">Privacy</a>
+                        <a href="#" class="text-light opacity-75 small">Terms</a>
+                        <a href="#" class="text-light opacity-75 small">Cookies</a>
+                        <a href="#" class="text-light opacity-75 small">Sitemap</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -149,3 +227,55 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
+
+<style>
+.footer-links li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    opacity: 1 !important;
+    color: #0d6efd !important;
+    transform: translateX(5px);
+}
+
+.social-links a {
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.social-links a:hover {
+    color: #0d6efd !important;
+    transform: translateY(-3px);
+}
+
+.footer-brand {
+    position: relative;
+}
+
+.footer-brand::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(90deg, #0d6efd, #6f42c1);
+    border-radius: 2px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+</style>
