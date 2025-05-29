@@ -129,6 +129,36 @@ Once the User model is implemented, you can access the admin panel at:
 
 ## Common Issues & Solutions
 
+### JSON Data Expected Error
+If you encounter `{"message": "JSON data expected", "success": false}`:
+
+1. **Backend Route Missing JSON Support**: The Flask route needs to accept JSON data
+   ```python
+   @app.route('/api/flashcards', methods=['POST'])
+   def create_flashcard_set():
+       if not request.is_json:
+           return jsonify({"message": "JSON data expected", "success": False}), 400
+       
+       data = request.get_json()
+       # Process the data...
+       return jsonify({"message": "Set created successfully", "success": True})
+   ```
+
+2. **Frontend Sending Form Data Instead of JSON**: The JavaScript needs to send proper JSON
+   ```javascript
+   fetch('/api/flashcards', {
+       method: 'POST',
+       headers: {
+           'Content-Type': 'application/json',
+       },
+       body: JSON.stringify(setData)
+   })
+   ```
+
+3. **CSRF Token Issues**: If using Flask-WTF, you may need to disable CSRF for API routes or include the token
+
+**Current Status**: The frontend JavaScript is ready but the backend API routes are not yet implemented. This error is expected until the backend is completed.
+
 ### Database-Related Errors
 If you encounter `NameError: name 'db' is not defined` or similar database errors:
 
