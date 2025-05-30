@@ -12,7 +12,7 @@ def create_app():
     
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///quizlet_clone.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Initialize extensions with app
@@ -48,47 +48,40 @@ def create_app():
     
     # Create database tables
     with app.app_context():
-        # Drop all tables and recreate them to ensure correct schema
-        db.drop_all()
         db.create_all()
         
-        # Create default admin user
-        admin_user = User(
-            username='admin',
-            email='admin@quizletclone.com',
-            first_name='Admin',
-            last_name='User',
-            role='admin'
-        )
-        admin_user.set_password('admin123')
-        db.session.add(admin_user)
-        
-        # Create a sample student user
-        student_user = User(
-            username='student',
-            email='student@example.com',
-            first_name='John',
-            last_name='Student',
-            role='student'
-        )
-        student_user.set_password('student123')
-        db.session.add(student_user)
-        
-        # Create a sample teacher user
-        teacher_user = User(
-            username='teacher',
-            email='teacher@example.com',
-            first_name='Jane',
-            last_name='Teacher',
-            role='teacher'
-        )
-        teacher_user.set_password('teacher123')
-        db.session.add(teacher_user)
-        
-        db.session.commit()
-        print("Database initialized with default users:")
-        print("Admin: admin@quizletclone.com / admin123")
-        print("Student: student@example.com / student123")
-        print("Teacher: teacher@example.com / teacher123")
+        # Create default users only if they don't exist
+        if not User.query.filter_by(username='admin').first():
+            admin_user = User(
+                username='admin',
+                email='admin@quizletclone.com',
+                first_name='Admin',
+                last_name='User',
+                role='admin'
+            )
+            admin_user.set_password('admin123')
+            db.session.add(admin_user)
+            
+            student_user = User(
+                username='student',
+                email='student@example.com',
+                first_name='John',
+                last_name='Student',
+                role='student'
+            )
+            student_user.set_password('student123')
+            db.session.add(student_user)
+            
+            teacher_user = User(
+                username='teacher',
+                email='teacher@example.com',
+                first_name='Jane',
+                last_name='Teacher',
+                role='teacher'
+            )
+            teacher_user.set_password('teacher123')
+            db.session.add(teacher_user)
+            
+            db.session.commit()
     
     return app

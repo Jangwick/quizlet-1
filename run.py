@@ -5,6 +5,44 @@ from flask import render_template_string
 
 app = create_app()
 
+# Initialize database with sample data for in-memory database
+def init_sample_data():
+    with app.app_context():
+        db.create_all()
+        
+        # Check if data already exists
+        if User.query.first():
+            return
+            
+        # Create sample user
+        sample_user = User(
+            username='demo_user',
+            email='demo@example.com'
+        )
+        sample_user.set_password('demo123')
+        db.session.add(sample_user)
+        
+        # Create sample flashcard set
+        sample_set = FlashcardSet(
+            title='Demo Vocabulary',
+            description='Sample flashcard set for testing',
+            user_id=1
+        )
+        db.session.add(sample_set)
+        db.session.commit()
+        
+        # Create sample flashcards
+        flashcards = [
+            Flashcard(front='Hello', back='Hola', set_id=1),
+            Flashcard(front='Goodbye', back='Adiós', set_id=1),
+            Flashcard(front='Thank you', back='Gracias', set_id=1)
+        ]
+        for card in flashcards:
+            db.session.add(card)
+        
+        db.session.commit()
+        print("✅ Sample data initialized")
+
 @app.context_processor
 def inject_current_year():
     return {'current_year': datetime.now().year}
@@ -35,14 +73,14 @@ def internal_error(error):
         <div class="solution">
             <h3>Quick Fix:</h3>
             <p>1. Create the missing template directories:</p>
-            <code>mkdir app\\templates\\auth app\\templates\\flashcards app\\templates\\study app\\templates\\dashboard</code>
+            <code>mkdir app/templates/auth app/templates/flashcards app/templates/study app/templates/dashboard</code>
             
             <p>2. Create minimal template files:</p>
             <ul>
-                <li><code>app\\templates\\base.html</code></li>
-                <li><code>app\\templates\\home.html</code></li>
-                <li><code>app\\templates\\auth\\login.html</code></li>
-                <li><code>app\\templates\\auth\\register.html</code></li>
+                <li><code>app/templates/base.html</code></li>
+                <li><code>app/templates/home.html</code></li>
+                <li><code>app/templates/auth/login.html</code></li>
+                <li><code>app/templates/auth/register.html</code></li>
             </ul>
             
             <p>3. Restart the application</p>
@@ -65,15 +103,19 @@ def test_route():
     </head>
     <body>
         <div class="container mt-5">
-            <h1>🎉 Application is Running!</h1>
+            <h1>🎉 Application is Running on Vercel!</h1>
             <p>This test route confirms that Flask is working correctly.</p>
             <p>Current year: {{ current_year }}</p>
+            <p>Database: In-memory SQLite</p>
+            <div class="alert alert-info">
+                <strong>Sample Data Available:</strong>
+                <ul>
+                    <li>Demo user: demo_user / demo123</li>
+                    <li>Sample flashcard set with vocabulary</li>
+                </ul>
+            </div>
             <div class="alert alert-warning">
-                <strong>Next Steps:</strong>
-                <ol>
-                    <li>Create the template directories and files as shown in the README</li>
-                    <li>Test the main routes: <a href="/">Home</a>, <a href="/auth/login">Login</a></li>
-                </ol>
+                <strong>Note:</strong> Data resets on each deployment since using in-memory database.
             </div>
         </div>
     </body>
@@ -91,9 +133,12 @@ def make_shell_context():
         'UserProgress': UserProgress
     }
 
+# Initialize sample data when app starts
+init_sample_data()
+
 if __name__ == '__main__':
     print("🚀 Starting Quizlet Clone Application...")
-    print("📁 Make sure template files exist in app/templates/")
-    print("🌐 Test route available at: http://localhost:5000/test")
-    print("🏠 Main application at: http://localhost:5000/")
+    print("💾 Using in-memory SQLite database")
+    print("🌐 Test route available at: /test")
+    print("🏠 Main application at: /")
     app.run(debug=True)
