@@ -91,6 +91,13 @@
         <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
     </div>
     
+    <!-- Back Button -->
+    <div class="position-fixed" style="top: 20px; left: 20px; z-index: 1002;">
+        <a href="{{ url_for('flashcards.view_set', set_id=flashcard_set.id) }}" class="btn btn-outline-light btn-sm rounded-pill shadow-sm">
+            <i class="bi bi-arrow-left"></i> Back to Set
+        </a>
+    </div>
+    
     <div class="container">
         <div class="row">
             <div class="col-12">

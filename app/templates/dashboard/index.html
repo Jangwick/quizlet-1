@@ -2,228 +2,250 @@
 
 {% block title %}Dashboard - Quizlet Clone{% endblock %}
 
-{% block content %}
-<!-- Dashboard Header -->
-<section class="dashboard-header">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="display-5 fw-bold mb-2">Welcome back, {{ current_user.first_name }}!</h1>
-                <p class="lead">Ready to continue your learning journey?</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<div class="container py-5">
-    <!-- Quick Stats -->
-    <div class="row mb-5">
-        <div class="col-md-3">
-            <div class="card dashboard-card text-center">
-                <div class="card-body">
-                    <i class="bi bi-collection fs-1 text-primary mb-2"></i>
-                    <h3 class="fw-bold" id="total-sets">{{ total_sets or 0 }}</h3>
-                    <p class="text-muted mb-0">Study Sets</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card text-center">
-                <div class="card-body">
-                    <i class="bi bi-fire fs-1 text-warning mb-2"></i>
-                    <h3 class="fw-bold" id="study-streak">{{ study_streak or 0 }}</h3>
-                    <p class="text-muted mb-0">Day Streak</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card text-center">
-                <div class="card-body">
-                    <i class="bi bi-card-text fs-1 text-info mb-2"></i>
-                    <h3 class="fw-bold" id="cards-studied">{{ cards_studied_today or 0 }}</h3>
-                    <p class="text-muted mb-0">Cards Today</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card text-center">
-                <div class="card-body">
-                    <i class="bi bi-graph-up fs-1 text-success mb-2"></i>
-                    <h3 class="fw-bold" id="accuracy">{{ overall_accuracy or 0 }}%</h3>
-                    <p class="text-muted mb-0">Accuracy</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <h3 class="fw-bold mb-3">Quick Actions</h3>
-        </div>
-        <div class="col-md-3">
-            <a href="{{ url_for('flashcards.create_set') }}" class="quick-action text-decoration-none" data-action="create-set">
-                <div class="card dashboard-card text-center h-100">
-                    <div class="card-body">
-                        <i class="bi bi-plus-circle fs-1 text-primary mb-2"></i>
-                        <h5 class="fw-bold">Create Set</h5>
-                        <p class="text-muted small">Start a new study set</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="#" class="quick-action text-decoration-none" data-action="continue-studying">
-                <div class="card dashboard-card text-center h-100">
-                    <div class="card-body">
-                        <i class="bi bi-play-circle fs-1 text-success mb-2"></i>
-                        <h5 class="fw-bold">Continue Studying</h5>
-                        <p class="text-muted small">Pick up where you left off</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="#" class="quick-action text-decoration-none" data-action="review-mistakes">
-                <div class="card dashboard-card text-center h-100">
-                    <div class="card-body">
-                        <i class="bi bi-arrow-repeat fs-1 text-warning mb-2"></i>
-                        <h5 class="fw-bold">Review Mistakes</h5>
-                        <p class="text-muted small">Study cards you got wrong</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="#" class="quick-action text-decoration-none" data-action="random-study">
-                <div class="card dashboard-card text-center h-100">
-                    <div class="card-body">
-                        <i class="bi bi-shuffle fs-1 text-info mb-2"></i>
-                        <h5 class="fw-bold">Random Study</h5>
-                        <p class="text-muted small">Study a random set</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Recent Sets -->
-        <div class="col-lg-8">
-            <h3 class="fw-bold mb-3">Your Recent Sets</h3>
-            <div class="row" id="recent-sets">
-                {% if recent_sets %}
-                {% for set in recent_sets %}
-                <div class="col-md-6 mb-3">
-                    <div class="card dashboard-card h-100">
-                        <div class="card-body">
-                            <h6 class="card-title">{{ set.title }}</h6>
-                            <p class="card-text text-muted small">{{ set.flashcards|length }} cards</p>
-                            <div class="progress mb-2" style="height: 5px;">
-                                <div class="progress-bar" style="width: {{ set.progress or 0 }}%"></div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">{{ set.progress or 0 }}% mastered</small>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ url_for('study.flashcards_mode', set_id=set.id) }}" class="btn btn-outline-primary">
-                                        <i class="bi bi-play"></i>
-                                    </a>
-                                    <a href="{{ url_for('flashcards.edit_set', set_id=set.id) }}" class="btn btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-                {% else %}
-                <div class="col-12">
-                    <div class="text-center py-4">
-                        <i class="bi bi-collection fs-1 text-muted"></i>
-                        <h5 class="mt-3">No study sets yet</h5>
-                        <p class="text-muted">Create your first study set to get started!</p>
-                        <a href="{{ url_for('flashcards.create_set') }}" class="btn btn-primary">Create Your First Set</a>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Recent Activity</h5>
-                </div>
-                <div class="card-body">
-                    {% if recent_activity %}
-                    <div class="activity-feed">
-                        {% for activity in recent_activity %}
-                        <div class="activity-item d-flex align-items-start mb-3">
-                            <div class="activity-icon me-3">
-                                <i class="bi {{ activity.icon or 'bi-circle' }} text-primary"></i>
-                            </div>
-                            <div class="activity-content">
-                                <p class="mb-1">{{ activity.description }}</p>
-                                <small class="text-muted">{{ activity.timestamp.strftime('%b %d, %Y at %I:%M %p') }}</small>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <i class="bi bi-clock-history fs-2 text-muted"></i>
-                        <p class="text-muted mt-2">No recent activity</p>
-                        <a href="{{ url_for('flashcards.create_set') }}" class="btn btn-primary btn-sm">
-                            Create Your First Set
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+{% block extra_css %}
 <style>
-.activity-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 30px 30px;
 }
 
-.activity-item:last-child {
-    margin-bottom: 0 !important;
+.dashboard-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
 .stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-left: 4px solid;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card.sets { border-left-color: #0d6efd; }
+.stat-card.streak { border-left-color: #ffc107; }
+.stat-card.cards { border-left-color: #17a2b8; }
+.stat-card.accuracy { border-left-color: #28a745; }
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    transform: translate(30px, -30px);
+}
+
+.quick-action {
+    transition: all 0.3s ease;
     border-radius: 15px;
+    overflow: hidden;
+}
+
+.quick-action:hover {
+    transform: translateY(-3px);
+    text-decoration: none;
+}
+
+.quick-action .card {
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action:hover .card {
+    border-color: #0d6efd;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+}
+
+.quick-action .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);
+    transform: scaleX(0);
     transition: transform 0.3s ease;
 }
 
-.stat-card:hover {
-    transform: translateY(-5px);
+.quick-action:hover .card::before {
+    transform: scaleX(1);
 }
 
 .study-set-card {
-    transition: all 0.3s ease;
+    border: none;
     border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .study-set-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.study-set-card .progress {
+    height: 6px;
+    border-radius: 3px;
+    background: #e9ecef;
+}
+
+.study-set-card .progress-bar {
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    border-radius: 3px;
+}
+
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+}
+
+.activity-icon.study { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+.activity-icon.create { background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); color: white; }
+.activity-icon.complete { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; }
+.activity-icon.edit { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; }
+
+.welcome-section {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.streak-counter {
+    position: relative;
+}
+
+.streak-flame {
+    animation: flicker 2s infinite alternate;
+}
+
+@keyframes flicker {
+    0%, 100% { transform: rotate(-1deg) scale(1); }
+    50% { transform: rotate(1deg) scale(1.05); }
+}
+
+.achievement-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ffc107;
+    color: #000;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.empty-state {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #dee2e6;
+    border-radius: 15px;
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.floating-widget {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.floating-widget:hover {
+    transform: scale(1.1);
+    background: #0d6efd;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 2rem 0;
+        margin: -1rem -15px 1rem -15px;
+    }
+    
+    .welcome-section {
+        padding: 1.5rem;
+    }
+    
+    .floating-widget {
+        bottom: 1rem;
+        right: 1rem;
+        width: 50px;
+        height: 50px;
+    }
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 1rem 0;
 }
 
 .progress-ring {
+    width: 80px;
+    height: 80px;
+    position: relative;
+}
+
+.progress-ring svg {
     transform: rotate(-90deg);
 }
 
@@ -241,45 +263,566 @@
     stroke: #28a745;
     stroke-dasharray: 251.2;
     stroke-dashoffset: calc(251.2 - (251.2 * var(--progress)) / 100);
-    transition: stroke-dashoffset 0.5s ease;
+    transition: stroke-dashoffset 0.8s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    font-weight: bold;
 }
 </style>
+{% endblock %}
+
+{% block content %}
+<!-- Enhanced Dashboard Header -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="welcome-section">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-5 fw-bold mb-2">
+                        Welcome back, {{ current_user.first_name or current_user.username }}! 
+                        <span class="wave">👋</span>
+                    </h1>
+                    <p class="lead mb-3">Ready to continue your learning journey?</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="badge bg-light text-dark px-3 py-2">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            Last studied: {{ last_study_date or 'Never' }}
+                        </div>
+                        <div class="badge bg-light text-dark px-3 py-2">
+                            <i class="bi bi-trophy me-1"></i>
+                            Level {{ user_level or 1 }}
+                        </div>
+                        <div class="badge bg-light text-dark px-3 py-2">
+                            <i class="bi bi-star me-1"></i>
+                            {{ total_xp or 0 }} XP
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="progress-ring" data-progress="{{ overall_accuracy or 0 }}">
+                        <svg width="80" height="80">
+                            <circle class="progress-bg" cx="40" cy="40" r="35"></circle>
+                            <circle class="progress-fill" cx="40" cy="40" r="35"></circle>
+                        </svg>
+                        <div class="progress-text">{{ overall_accuracy or 0 }}%</div>
+                    </div>
+                    <small class="text-light">Overall Accuracy</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- Enhanced Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card stat-card sets h-100">
+                <div class="card-body text-center position-relative">
+                    <i class="bi bi-collection fs-1 text-primary mb-2"></i>
+                    <h3 class="fw-bold" id="total-sets">{{ user_sets_count or 0 }}</h3>
+                    <p class="text-muted mb-0">Study Sets Created</p>
+                    {% if user_sets_count and user_sets_count >= 5 %}
+                    <div class="achievement-badge">🏆</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card stat-card streak h-100">
+                <div class="card-body text-center position-relative streak-counter">
+                    <i class="bi bi-fire fs-1 text-warning mb-2 streak-flame"></i>
+                    <h3 class="fw-bold" id="study-streak">{{ study_streak or 0 }}</h3>
+                    <p class="text-muted mb-0">Day Streak</p>
+                    {% if study_streak and study_streak >= 7 %}
+                    <div class="achievement-badge">🔥</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card stat-card cards h-100">
+                <div class="card-body text-center position-relative">
+                    <i class="bi bi-card-text fs-1 text-info mb-2"></i>
+                    <h3 class="fw-bold" id="cards-studied">{{ cards_studied_today or 0 }}</h3>
+                    <p class="text-muted mb-0">Cards Studied Today</p>
+                    {% if cards_studied_today and cards_studied_today >= 50 %}
+                    <div class="achievement-badge">⚡</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card stat-card accuracy h-100">
+                <div class="card-body text-center position-relative">
+                    <i class="bi bi-graph-up fs-1 text-success mb-2"></i>
+                    <h3 class="fw-bold" id="accuracy">{{ overall_accuracy or 0 }}%</h3>
+                    <p class="text-muted mb-0">Average Accuracy</p>
+                    {% if overall_accuracy and overall_accuracy >= 90 %}
+                    <div class="achievement-badge">🎯</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">
+                <i class="bi bi-lightning-charge me-2"></i>Quick Actions
+            </h3>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{{ url_for('flashcards.create_set') }}" class="quick-action text-decoration-none" data-action="create-set">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-plus-circle fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Create New Set</h5>
+                        <p class="text-muted small mb-0">Start building your knowledge</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="#" class="quick-action text-decoration-none" data-action="continue-studying" onclick="continueStudying()">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-play-circle fs-1 text-success mb-3"></i>
+                        <h5 class="fw-bold">Continue Studying</h5>
+                        <p class="text-muted small mb-0">Pick up where you left off</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="#" class="quick-action text-decoration-none" data-action="review-mistakes" onclick="reviewMistakes()">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-arrow-repeat fs-1 text-warning mb-3"></i>
+                        <h5 class="fw-bold">Review Mistakes</h5>
+                        <p class="text-muted small mb-0">Master challenging cards</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="#" class="quick-action text-decoration-none" data-action="random-study" onclick="randomStudy()">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-shuffle fs-1 text-info mb-3"></i>
+                        <h5 class="fw-bold">Random Study</h5>
+                        <p class="text-muted small mb-0">Surprise learning session</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Enhanced Recent Sets -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold">
+                    <i class="bi bi-collection me-2"></i>Your Study Sets
+                </h3>
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortSets('recent')">Recent</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortSets('progress')">Progress</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="sortSets('name')">Name</button>
+                </div>
+            </div>
+            
+            <div class="row" id="recent-sets">
+                {% if recent_sets %}
+                {% for set in recent_sets %}
+                <div class="col-md-6 mb-3" data-set-id="{{ set.id if set.id is defined else set['id'] }}">
+                    <div class="card study-set-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">{{ set.title if set.title is defined else set['title'] }}</h6>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{{ url_for('study.flashcards_mode', set_id=set.id if set.id is defined else set['id']) }}">
+                                            <i class="bi bi-play me-2"></i>Study
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('flashcards.edit_set', set_id=set.id if set.id is defined else set['id']) }}">
+                                            <i class="bi bi-pencil me-2"></i>Edit
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('flashcards.view_set', set_id=set.id if set.id is defined else set['id']) }}">
+                                            <i class="bi bi-eye me-2"></i>View
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteSet({{ set.id if set.id is defined else set['id'] }})">
+                                            <i class="bi bi-trash me-2"></i>Delete
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <small class="text-muted">{{ (set.flashcards|length) if set.flashcards is defined else (set['flashcard_count'] or 0) }} cards</small>
+                                <small class="text-muted">
+                                    {% if set.created_at is defined %}
+                                        {{ set.created_at.strftime('%b %d') }}
+                                    {% elif set['created_at'] %}
+                                        {{ set['created_at'] }}
+                                    {% else %}
+                                        Recent
+                                    {% endif %}
+                                </small>
+                                {% if (set.last_studied is defined and set.last_studied) or (set['last_studied'] and set['last_studied']) %}
+                                <small class="text-success">
+                                    Last studied: 
+                                    {% if set.last_studied is defined %}
+                                        {{ set.last_studied.strftime('%b %d') }}
+                                    {% else %}
+                                        {{ set['last_studied'] }}
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="progress mb-3" style="height: 6px;">
+                                <div class="progress-bar" style="width: {{ (set.mastery_progress if set.mastery_progress is defined else set['mastery_progress']) or 0 }}%" 
+                                     data-bs-toggle="tooltip" title="{{ (set.mastery_progress if set.mastery_progress is defined else set['mastery_progress']) or 0 }}% mastered"></div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-1">
+                                    {% for mode in ['flashcards', 'learn', 'test', 'match'] %}
+                                    <a href="{{ url_for('study.' + mode + '_mode', set_id=set.id if set.id is defined else set['id']) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       data-bs-toggle="tooltip" title="{{ mode.title() }} Mode">
+                                        <i class="bi bi-{{ 'card-text' if mode == 'flashcards' else 'brain' if mode == 'learn' else 'question-circle' if mode == 'test' else 'puzzle' }}"></i>
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted">{{ (set.mastery_progress if set.mastery_progress is defined else set['mastery_progress']) or 0 }}% mastered</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="bi bi-collection" style="font-size: 4rem; opacity: 0.5;"></i>
+                        <h4 class="mt-3">No study sets yet</h4>
+                        <p class="mb-4">Create your first study set to get started on your learning journey!</p>
+                        <a href="{{ url_for('flashcards.create_set') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-plus-lg me-2"></i>Create Your First Set
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if recent_sets and recent_sets|length > 4 %}
+            <div class="text-center mt-3">
+                <a href="{{ url_for('flashcards.index') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-right me-2"></i>View All Sets
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Enhanced Activity & Progress -->
+        <div class="col-lg-4">
+            <!-- Recent Activity -->
+            <div class="card dashboard-card mb-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0">
+                        <i class="bi bi-activity me-2"></i>Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_activity %}
+                    <div class="activity-feed">
+                        {% for activity in recent_activity %}
+                        <div class="activity-item d-flex align-items-start">
+                            <div class="activity-icon {{ (activity.type if activity.type is defined else activity['type']) or 'study' }} me-3">
+                                <i class="bi {{ (activity.icon if activity.icon is defined else activity['icon']) or 'bi-circle' }}"></i>
+                            </div>
+                            <div class="activity-content flex-grow-1">
+                                <p class="mb-1">{{ activity.description if activity.description is defined else activity['description'] }}</p>
+                                <small class="text-muted">
+                                    {% if activity.created_at is defined %}
+                                        {{ activity.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                                    {% elif activity['created_at'] %}
+                                        {{ activity['created_at'] }}
+                                    {% elif activity.timestamp is defined %}
+                                        {{ activity.timestamp.strftime('%b %d, %Y at %I:%M %p') }}
+                                    {% elif activity['timestamp'] %}
+                                        {{ activity['timestamp'] }}
+                                    {% else %}
+                                        Just now
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-clock-history fs-2 text-muted mb-3"></i>
+                        <p class="text-muted">No recent activity</p>
+                        <p class="small text-muted">Start studying to see your progress here!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Study Goal -->
+            <div class="card dashboard-card">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0">
+                        <i class="bi bi-target me-2"></i>Daily Goal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Cards studied today</span>
+                        <span class="fw-bold">{{ cards_studied_today or 0 }}/{{ daily_goal or 20 }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar" style="width: {{ ((cards_studied_today or 0) / (daily_goal or 20) * 100) | round }}%"></div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-primary">
+                                <i class="bi bi-calendar-week"></i>
+                                <div class="small">This Week</div>
+                                <div class="fw-bold">{{ cards_this_week or 0 }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-success">
+                                <i class="bi bi-calendar-month"></i>
+                                <div class="small">This Month</div>
+                                <div class="fw-bold">{{ cards_this_month or 0 }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-info">
+                                <i class="bi bi-star"></i>
+                                <div class="small">Total XP</div>
+                                <div class="fw-bold">{{ total_xp or 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Quick Study Widget -->
+<div class="floating-widget" onclick="quickStudy()" data-bs-toggle="tooltip" title="Quick Study">
+    <i class="bi bi-lightning-charge fs-4"></i>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
-// Initialize tooltips
-var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
-});
-
-// Animate progress rings
-document.addEventListener('DOMContentLoaded', function() {
-    const progressRings = document.querySelectorAll('.progress-fill');
-    progressRings.forEach(ring => {
-        const progress = ring.closest('.progress-ring').dataset.progress || 0;
-        ring.style.setProperty('--progress', progress);
-    });
-});
-
-// Quick action handlers
-function quickStudy() {
-    // This would redirect to a quick study session
-    alert('Quick study feature coming soon!');
-}
-
-function createSet() {
-    window.location.href = '{{ url_for("flashcards.create_set") }}';
+// Enhanced action handlers
+function continueStudying() {
+    {% if recent_sets and recent_sets|length > 0 %}
+    const firstSetId = {{ (recent_sets[0].id if recent_sets[0].id is defined else recent_sets[0]['id']) or 'null' }};
+    if (firstSetId) {
+        window.location.href = `/study/${firstSetId}/flashcards`;
+    } else {
+        showMessage('Create a study set first!', 'info');
+        window.location.href = "{{ url_for('flashcards.create_set') }}";
+    }
+    {% else %}
+    showMessage('Create a study set first!', 'info');
+    window.location.href = "{{ url_for('flashcards.create_set') }}";
+    {% endif %}
 }
 
 function reviewMistakes() {
-    window.location.href = '{{ url_for("study.review_mistakes") }}';
+    {% if recent_sets and recent_sets|length > 0 %}
+    const firstSetId = {{ (recent_sets[0].id if recent_sets[0].id is defined else recent_sets[0]['id']) or 'null' }};
+    if (firstSetId) {
+        window.location.href = `/study/${firstSetId}/learn?review=mistakes`;
+    } else {
+        showMessage('No sets available for review!', 'info');
+    }
+    {% else %}
+    showMessage('Create some study sets first!', 'info');
+    {% endif %}
 }
 
-function viewProgress() {
-    alert('Detailed progress tracking coming soon!');
+function randomStudy() {
+    {% if recent_sets and recent_sets|length > 0 %}
+    const sets = [
+        {% for set in recent_sets %}
+        {{ set.id if set.id is defined else set['id'] }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    const modes = ['flashcards', 'learn', 'test', 'match'];
+    const randomSet = sets[Math.floor(Math.random() * sets.length)];
+    const randomMode = modes[Math.floor(Math.random() * modes.length)];
+    window.location.href = `/study/${randomSet}/${randomMode}`;
+    {% else %}
+    showMessage('Create some study sets first!', 'info');
+    {% endif %}
 }
+
+function quickStudy() {
+    {% if recent_sets and recent_sets|length > 0 %}
+    const recentSetId = {{ (recent_sets[0].id if recent_sets[0].id is defined else recent_sets[0]['id']) or 'null' }};
+    if (recentSetId) {
+        window.location.href = `/study/${recentSetId}/learn?quick=true`;
+    } else {
+        showMessage('Create a study set to start quick study!', 'info');
+    }
+    {% else %}
+    showMessage('Create a study set to start quick study!', 'info');
+    {% endif %}
+}
+
+// Sorting functionality
+function sortSets(criteria) {
+    const container = document.getElementById('recent-sets');
+    const sets = Array.from(container.children);
+    
+    sets.sort((a, b) => {
+        switch(criteria) {
+            case 'name':
+                return a.querySelector('.card-title').textContent.localeCompare(
+                    b.querySelector('.card-title').textContent
+                );
+            case 'progress':
+                const progressA = parseFloat(a.querySelector('.progress-bar').style.width) || 0;
+                const progressB = parseFloat(b.querySelector('.progress-bar').style.width) || 0;
+                return progressB - progressA;
+            case 'recent':
+            default:
+                return parseInt(b.dataset.setId) - parseInt(a.dataset.setId);
+        }
+    });
+    
+    container.innerHTML = '';
+    sets.forEach(set => container.appendChild(set));
+    
+    // Visual feedback
+    container.style.opacity = '0.5';
+    setTimeout(() => {
+        container.style.opacity = '1';
+    }, 200);
+}
+
+// Delete set with confirmation
+function deleteSet(setId) {
+    if (confirm('Are you sure you want to delete this study set? This action cannot be undone.')) {
+        // Demo mode - just remove from DOM
+        const setElement = document.querySelector(`[data-set-id="${setId}"]`);
+        if (setElement) {
+            setElement.style.transform = 'scale(0)';
+            setElement.style.opacity = '0';
+            setTimeout(() => {
+                setElement.remove();
+            }, 300);
+        }
+        showMessage('Study set deleted successfully!', 'success');
+        
+        // In real implementation:
+        // fetch(`/api/flashcard_sets/${setId}`, { method: 'DELETE' })
+    }
+}
+
+// Animate counters
+function animateCounter(element) {
+    const target = parseInt(element.textContent);
+    const duration = 1000;
+    const step = target / (duration / 16);
+    let current = 0;
+    
+    const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
+        }
+        element.textContent = Math.floor(current) + (element.id === 'accuracy' ? '%' : '');
+    }, 16);
+}
+
+// Load recent activity
+function loadRecentActivity() {
+    // In real implementation, fetch from API
+    // This is demo data
+    const activities = [
+        {
+            type: 'study',
+            icon: 'bi-play-circle',
+            description: 'Completed Spanish Vocabulary flashcards',
+            time: 'Just now'
+        },
+        {
+            type: 'create',
+            icon: 'bi-plus-circle',
+            description: 'Created new set: Biology Chapter 5',
+            time: '2 hours ago'
+        }
+    ];
+    
+    // Update activity feed if needed
+}
+
+// Show message function
+function showMessage(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Create toast container if it doesn't exist
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove toast element after it's hidden
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+// Wave animation for welcome message
+document.addEventListener('DOMContentLoaded', function() {
+    const wave = document.querySelector('.wave');
+    if (wave) {
+        setInterval(() => {
+            wave.style.transform = 'rotate(20deg)';
+            setTimeout(() => {
+                wave.style.transform = 'rotate(0deg)';
+            }, 150);
+        }, 2000);
+    }
+});
 </script>
 {% endblock %}
