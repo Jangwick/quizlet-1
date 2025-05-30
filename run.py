@@ -94,10 +94,3 @@ def make_shell_context():
         'StudySession': StudySession,
         'UserProgress': UserProgress
     }
-
-if __name__ == '__main__':
-    print("🚀 Starting Quizlet Clone Application...")
-    print("💾 Using in-memory SQLite database")
-    print("🌐 Test route available at: /test")
-    print("🏠 Main application at: /")
-    app.run(debug=True)
