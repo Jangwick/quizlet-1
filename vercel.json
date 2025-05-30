@@ -9,11 +9,16 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "app.py"
+      "dest": "/app.py"
     }
   ],
   "env": {
     "FLASK_ENV": "production",
     "DATABASE_URL": "sqlite:///:memory:"
+  },
+  "functions": {
+    "app.py": {
+      "runtime": "python3.9"
+    }
   }
 }
