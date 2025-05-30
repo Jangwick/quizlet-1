@@ -5,44 +5,6 @@ from flask import render_template_string
 
 app = create_app()
 
-# Initialize database with sample data for in-memory database
-def init_sample_data():
-    with app.app_context():
-        db.create_all()
-        
-        # Check if data already exists
-        if User.query.first():
-            return
-            
-        # Create sample user
-        sample_user = User(
-            username='demo_user',
-            email='demo@example.com'
-        )
-        sample_user.set_password('demo123')
-        db.session.add(sample_user)
-        
-        # Create sample flashcard set
-        sample_set = FlashcardSet(
-            title='Demo Vocabulary',
-            description='Sample flashcard set for testing',
-            user_id=1
-        )
-        db.session.add(sample_set)
-        db.session.commit()
-        
-        # Create sample flashcards
-        flashcards = [
-            Flashcard(front='Hello', back='Hola', set_id=1),
-            Flashcard(front='Goodbye', back='Adiós', set_id=1),
-            Flashcard(front='Thank you', back='Gracias', set_id=1)
-        ]
-        for card in flashcards:
-            db.session.add(card)
-        
-        db.session.commit()
-        print("✅ Sample data initialized")
-
 @app.context_processor
 def inject_current_year():
     return {'current_year': datetime.now().year}
@@ -132,9 +94,6 @@ def make_shell_context():
         'StudySession': StudySession,
         'UserProgress': UserProgress
     }
-
-# Initialize sample data when app starts
-init_sample_data()
 
 if __name__ == '__main__':
     print("🚀 Starting Quizlet Clone Application...")
